@@ -1,4 +1,4 @@
-package quinn.automic;
+package quinn.atomic;
 
 import java.util.concurrent.atomic.AtomicLong;
 
