@@ -1,5 +1,8 @@
 package quinn.lock;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -7,19 +10,75 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * 
  * 
- * condition: Ìõ¼ş¶ÓÁĞ£» ¶ÓÁĞÊÇÒ»¸öFIFO¶ÓÁĞ£¬¶ÓÁĞµÄÃ¿¸ö½Úµã¶¼ÊÇµÈ´ıÔÚCondition¶ÔÏóÉÏµÄÏß³ÌµÄÒıÓÃ
+ * condition: æ¡ä»¶é˜Ÿåˆ—ï¼› é˜Ÿåˆ—æ˜¯ä¸€ä¸ªFIFOé˜Ÿåˆ—ï¼Œé˜Ÿåˆ—çš„æ¯ä¸ªèŠ‚ç‚¹éƒ½æ˜¯ç­‰å¾…åœ¨Conditionå¯¹è±¡ä¸Šçš„çº¿ç¨‹çš„å¼•ç”¨
+
  * 
- *   ¹¦ÄÜ£º Ö÷ÒªÎªReentrantLockÌá¹©£º µÈ´ıºÍ»½ĞÑµÄ¹¦ÄÜ
- *  
- *  
- *  ÒÔjdkÔ´ÂëÌá¹©µÄÀı×ÓÕ¹Ê¾
- * 
+
+ *   åŠŸèƒ½ï¼š ä¸»è¦ä¸ºReentrantLockæä¾›ï¼š ç­‰å¾…å’Œå”¤é†’çš„åŠŸèƒ½
+
+
+ *  ä»¥jdkæºç æä¾›çš„ä¾‹å­å±•ç¤º
  * 
  * @author quinn
  *
  */
 public class LearnCondition {
+	static BoundedBuffer buffer = new BoundedBuffer();
+	static AtomicInteger idIncrements = new AtomicInteger(0);
 	
+	public static void main(String args[]) throws InterruptedException {
+		
+		// ç”Ÿäº§çº¿ç¨‹
+		Thread[] producerThreads = new Thread[3];
+		for (int index = 0; index < 3; index ++) {
+			producerThreads[index] =  new Thread(new Runnable() {
+				
+				@Override
+				public void run() {
+					for (int index = 0 ;index < 33; index ++) {
+						try {
+							buffer.put(Thread.currentThread().getName() + " : " + idIncrements.incrementAndGet());
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						};
+					}
+					System.err.println(Thread.currentThread().getName() + " ç”Ÿäº§å®Œæˆï¼");
+				}
+			});
+			
+			producerThreads[index].setName("producer-thread-" + index);
+			producerThreads[index].setDaemon(false);
+		}
+		
+		// æ¶ˆè´¹è€…çº¿ç¨‹
+		Thread[] consumerThreads = new Thread[3];
+		for (int index = 0; index < 3; index ++) {
+			consumerThreads[index] = new Thread(new Runnable() {
+				
+				@Override
+				public void run() {
+					for (;;) {
+						try {
+							System.out.println(Thread.currentThread().getName() + " è·å–çš„å†…å®¹ï¼š" + buffer.take());
+							Thread.sleep(300);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+			});
+			consumerThreads[index].setName("consumer-thread-" + index);
+			consumerThreads[index].setDaemon(false);
+		}
+		
+		// å¯åŠ¨
+		for (int index = 0; index < 3; index ++) {
+			producerThreads[index].start();
+			consumerThreads[index].start();
+		}
+		
+		Thread.sleep(1000);
+	}
 	
 
 }
@@ -30,12 +89,17 @@ class BoundedBuffer {
 	final Condition notFull  = lock.newCondition();
 	final Condition notEmpty = lock.newCondition();
 	
-	final Object[] items = new Object[100];
+	final String[] items = new String[10];
 	
 	int putptr, takeptr, count;
 	
-	
-	 public void put(Object x) throws InterruptedException {
+	/**
+	 *  å¾ªç¯æŒ‰é¡ºåºå­˜æ”¾ï¼Œç›´åˆ°count == items.lengthï¼Œé˜»å¡ç­‰å¾…takeå”¤é†’
+	 * 
+	 * @param x
+	 * @throws InterruptedException
+	 */
+	 public void put(String x) throws InterruptedException {
 		 lock.lock();
 		 
 		 try {
@@ -56,15 +120,20 @@ class BoundedBuffer {
 		 }
 	 }
 	 
-	 
-	 public Object take() throws InterruptedException {
+	 /**
+	  *  å¾ªç¯æŒ‰é¡ºåºå–å‡ºï¼Œ ç›´åˆ°count == 0; é˜»å¡ç­‰å¾…putå”¤é†’
+	  * 
+	  * @return
+	  * @throws InterruptedException
+	  */
+	 public String take() throws InterruptedException {
 		 lock.lock();
 		 
 		 try {
 			 while (count == 0) {
 				 notEmpty.await();
 			 }
-			  Object x = items[takeptr];
+			 String x = items[takeptr];
 			  if (++takeptr == items.length) takeptr = 0;
 			  --count;
 			  notFull.signal();
