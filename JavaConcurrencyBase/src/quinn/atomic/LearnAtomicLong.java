@@ -1,46 +1,66 @@
 package quinn.atomic;
 
+
+
 import java.util.concurrent.atomic.AtomicLong;
 
+
+
 /**
+
  * 
- *  ÒÔ×Ô¶¯IDÉú³ÉÆ÷ÎªÀı
+
+ *  ä»¥è‡ªåŠ¨IDç”Ÿæˆå™¨ä¸ºä¾‹
+
  * 
- *  Ñ§Ï°AtomicLong ,AtomicInteger, µÄÓÅÊÆ
- * 
- * 
+
+ *  å­¦ä¹ AtomicLong ,AtomicInteger, çš„ä¼˜åŠ¿
+
  * @author quinn
+
  *
+
  */
+
 public class LearnAtomicLong {
-	
+
 	private static AtomicLong idIncrement_good = new AtomicLong(0);
-	
+
 	private volatile static Long idIncrement_bad = new Long(0);
-	
+
 	private static final String ID_PREFIX = "jiazq";
+
 	
+
 	/**
 	 * 
-	 *  »ñÈ¡id£»(ÍÆ¼ö·½Ê½)
+	 *  è·å–idï¼›(æ¨èæ–¹å¼)
 	 * 
 	 * @return newId
+
 	 */
+
 	public static String getId_Good() {
-		
+
 		return ID_PREFIX + idIncrement_good.incrementAndGet();
+
 	}
-	
-	
+
+
 	/**
 	 *  
-	 * »ñÈ¡id£»(²»ºÃµÄÊ¹ÓÃ·½Ê½)
-	 * 
+	 * è·å–idï¼›(ä¸å¥½çš„ä½¿ç”¨æ–¹å¼)
 	 * @return newId
 	 */
+
 	public static synchronized String getId_Bad() {
+
 		idIncrement_bad += 1;
+
 		return ID_PREFIX + idIncrement_bad;
+
 	}
+
+
 
 }

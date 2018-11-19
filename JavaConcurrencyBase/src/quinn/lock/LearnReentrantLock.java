@@ -1,10 +1,24 @@
 package quinn.lock;
 
+
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
+
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
+
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
+
+
+
 
 
 /**
@@ -12,158 +26,260 @@ import java.util.concurrent.locks.ReentrantLock;
  * 
  * 
  * 
- *  ÒÔĞŞ¸ÄÉè±¸×´Ì¬»º´æÎªÀı×Ó (Î±´úÂë)
- *  Ñ§Ï°ÖØÈëËø
+
+ *  ä»¥ä¿®æ”¹è®¾å¤‡çŠ¶æ€ç¼“å­˜ä¸ºä¾‹å­ (ä¼ªä»£ç )
+
+ *  å­¦ä¹ é‡å…¥é”
  * 
- *    B¼Æ»®ºÍC¼Æ»®£» ¸÷×ÔÓĞ×Ô¼ºµÄÊ¹ÓÃ³¡¾°
+ *    Bè®¡åˆ’å’ŒCè®¡åˆ’ï¼› å„è‡ªæœ‰è‡ªå·±çš„ä½¿ç”¨åœºæ™¯
  *    
- *    B¼Æ»®¸üÊÊºÏ CPUºÄÊ±²Ù×÷£¬ÀıÈçÍøÂç´«Êä
- *    C¼Æ»®¸üÊ±ºò£¬¼ÆËã²Ù×÷£¬ÏûºÄÊ±¼ä¶ÌµÄĞĞÎª
+ *    Bè®¡åˆ’æ›´é€‚åˆ CPUè€—æ—¶æ“ä½œï¼Œä¾‹å¦‚ç½‘ç»œä¼ è¾“
+ *    Cè®¡åˆ’æ›´æ—¶å€™ï¼Œè®¡ç®—æ“ä½œï¼Œæ¶ˆè€—æ—¶é—´çŸ­çš„è¡Œä¸º
  * 
+
  * @author quinn
+
  *
+
  */
+
 public class LearnReentrantLock {
+
+	private static AtomicInteger increment = new AtomicInteger();
 	
+	static SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
 	
+	private static final Random random = new Random();
+	
+	public static void main(String args[]) throws InterruptedException {
+		// å®šä¹‰å·¥ä½œçº¿ç¨‹
+		ExecutorService executorService = Executors.newFixedThreadPool(5, new ThreadFactory() {
+			@Override
+			public Thread newThread(Runnable r) {
+				 Thread t = new Thread(r);
+                 t.setName("work-threadPool-"+ increment.incrementAndGet());
+                 t.setDaemon(false);
+                 return t;
+			}
+		});
+		
+		// ç”¨äºæ–­ç‚¹
+		System.out.println("--------");
+		
+		// ä»»åŠ¡æäº¤
+		for (int index = 0; index < 1000; index ++) {
+			executorService.submit(new Runnable() {
+				
+				@Override
+				public void run() {
+					SocketDevice device = new SocketDevice();
+					device.setCode(random.nextInt(5) + "");
+					//updateDeviceInfo_bad(device);
+					//updateDeviceInfo_badA(device);
+					updateDeviceInfo_B(device);
+					//updateDeviceInfo_C(device);
+				}
+			});
+		} 
+		
+		Thread.sleep(2000);
+	}
+
 	/**
-	 *  ĞŞ¸ÄÉè±¸×´Ì¬(²»ÍÆ¼öÊ¹ÓÃ)
-	 *  È«¾ÖËø£¬µ¥¶À´¦Àí£¬ĞÔÄÜ×î²î
+
+	 *  ä¿®æ”¹è®¾å¤‡çŠ¶æ€(ä¸æ¨èä½¿ç”¨)
+	 *  å…¨å±€é”ï¼Œå•ç‹¬å¤„ç†ï¼Œæ€§èƒ½æœ€å·®
 	 * 
 	 * @param device
 	 */
+
 	public static synchronized void updateDeviceInfo_bad(SocketDevice device) {
-		localCacheSet();
+		localCacheSet(device.getCode());
 	}
+
 	
+
 	
+
 	/**
-	 *  ¸Ä½ø-A¼Æ»® £» Í¨¹ıÏ¸»¯ËøµÄÁ£¶È
+	 *  æ”¹è¿›-Aè®¡åˆ’ ï¼› é€šè¿‡ç»†åŒ–é”çš„ç²’åº¦
 	 *  
-	 *  »ñÈ¡Ëø
+	 *  è·å–é”
 	 *  
 	 */
+
 	private static Map<String, Object> lockObjectMap_bad_A = new HashMap<>();
-	
-	
+
 	public synchronized static Object getLock_A(String code) {
+
 		if (!lockObjectMap_bad_A.containsKey(code)) {
 			return lockObjectMap_bad_A.put(code, new Object());
 		}
 		return lockObjectMap_bad_A.get(code);
-	}
-	
-	public static void updateDeviceInfo_badA(SocketDevice device) {
-		synchronized (getLock_A(device.getCode())) {
-			localCacheSet();
-		}
+
 	}
 
-	
+	public static void updateDeviceInfo_badA(SocketDevice device) {
+
+		synchronized (getLock_A(device.getCode())) {
+			localCacheSet(device.getCode());
+		}
+
+	}
+
 	/**
-	 *  ¸Ä½ø-B¼Æ»® £» Í¨¹ıÏ¸»¯ËøµÄÁ£¶È  + ¸Ä½ø»ñÈ¡ËøµÄÁ£¶È
+
+	 *  æ”¹è¿›-Bè®¡åˆ’ ï¼› é€šè¿‡ç»†åŒ–é”çš„ç²’åº¦  + æ”¹è¿›è·å–é”çš„ç²’åº¦
 	 *  
-	 *  »ñÈ¡Ëø
+	 *  è·å–é”
 	 *  
 	 */
+
 	private static ConcurrentMap<String, Object> lockObjectMap_B = new ConcurrentHashMap<>(); 
+
 	public static Object getLock_B(String code) {
+
 		if(!lockObjectMap_B.containsKey(code)) {
+
 			lockObjectMap_B.putIfAbsent(code, new Object());
+
 		}
+
 		return lockObjectMap_B.get(code);
+
 	}
+
 	
+
 	public static void updateDeviceInfo_B(SocketDevice device) {
 		synchronized (getLock_B(device.getCode())) {
-			localCacheSet();
+			localCacheSet(device.getCode());
 		}
 	}
 
+
+
 	/**
-	 *  ¸Ä½ø-C¼Æ»® £» Í¨¹ıÏ¸»¯ËøµÄÁ£¶È
+
+	 *  æ”¹è¿›-Cè®¡åˆ’ ï¼› é€šè¿‡ç»†åŒ–é”çš„ç²’åº¦
 	 *  
-	 *  »ñÈ¡Ëø
+	 *  è·å–é”
 	 *  
 	 */	
+
 	private static ConcurrentMap<String, ReentrantLock> lockObjectMap_C = new ConcurrentHashMap<>();
-	
+
 	public static ReentrantLock getLock_C(String code) {
+
 		if(!lockObjectMap_C.containsKey(code)) {
 			lockObjectMap_C.putIfAbsent(code, new ReentrantLock(true));
 		}
+
 		return lockObjectMap_C.get(code);
+
 	}
+
 	
+
 	/**
-	 *  ´ÓÒµÎñÉÏ½â¾ö, µ¥Î»Ê±¼äÄÚ£¬¶àÌõ±ä¸ü²Ù×÷Ö»´¦ÀíÒ»Ìõ£» Çé¿ö
+
+	 *  ä»ä¸šåŠ¡ä¸Šè§£å†³, å•ä½æ—¶é—´å†…ï¼Œå¤šæ¡å˜æ›´æ“ä½œåªå¤„ç†ä¸€æ¡ï¼› æƒ…å†µ
+
 	 * 
+
 	 * @param code
+
 	 */
-	public static void updateDeviceInfo_C(String code) {
-		ReentrantLock lock = getLock_C(code);
+
+	public static void updateDeviceInfo_C(SocketDevice device) {
+
+		ReentrantLock lock = getLock_C(device.getCode());
+
 		try {
 			if(lock.tryLock()) {
-				localCacheSet();
+				localCacheSet(device.getCode());
 			}
-			
+
 		} finally {
 			lock.unlock();
 		}
 	}
-	
-	
-	
+
+
 	/**
-	 * Ğé¼Ù²Ù×÷
+
+	 * è™šå‡æ“ä½œ
+
 	 */
-	private static void localCacheSet() {
-		//...Ê¡ÂÔ²Ù×÷
+
+	private static void localCacheSet(String code) {
+		//...çœç•¥æ“ä½œ
+		try {
+			Random random1 = new Random();
+			for (long index =0; index < 100000000L; index ++) {
+				random1.nextInt(1000000);
+			}
+			long startTime = System.currentTimeMillis();
+			Thread.sleep(5000);
+			
+			System.out.println(Thread.currentThread().getName() +" " +code +"  "+
+					format.format(new Date()) + "sleep time : " + (System.currentTimeMillis() - startTime));
+
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 
 }
 
 
+
+
+
 class SocketDevice {
+
 	
+
 	/**
-	 *  Éè±¸±àºÅ
+	 *  è®¾å¤‡ç¼–å·
 	 * 
 	 */
 	private String code;
-	
-	
+
 	/**
-	 *  ²å×ùÃû³Æ
+	 *  æ’åº§åç§°
 	 */
 	private String name;
-	
+
 	/**
-	 *  ÔÚÏß×´Ì¬
+	 *  åœ¨çº¿çŠ¶æ€
 	 * 
 	 */
 	private boolean online;
-	
+
 	/**
-	 * µçÁ÷
+	 * ç”µæµ
 	 */
 	private int current;
-	
+
 	/**
-	 *  µçÑ¹
+	 *  ç”µå‹
 	 */
 	private int voltage;
-	
+
 	/**
-	 * ¹¦ÂÊ
+	 * åŠŸç‡
 	 */
 	private int power;
 
 	public String getName() {
+
 		return name;
+
 	}
 
 	public void setName(String name) {
+
 		this.name = name;
 	}
 
@@ -176,37 +292,71 @@ class SocketDevice {
 	}
 
 	public int getCurrent() {
+
 		return current;
+
 	}
+
+
 
 	public void setCurrent(int current) {
+
 		this.current = current;
+
 	}
+
+
 
 	public int getVoltage() {
+
 		return voltage;
+
 	}
+
+
 
 	public void setVoltage(int voltage) {
+
 		this.voltage = voltage;
+
 	}
+
+
 
 	public int getPower() {
+
 		return power;
+
 	}
+
+
 
 	public void setPower(int power) {
+
 		this.power = power;
+
 	}
+
+
 
 	public String getCode() {
+
 		return code;
+
 	}
 
+
+
 	public void setCode(String code) {
+
 		this.code = code;
+
 	}
+
 	
+
 	
+
 	
+
 }

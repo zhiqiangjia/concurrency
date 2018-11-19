@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * 
  * 
- * 
+ *  å»¶è¿Ÿé˜Ÿåˆ—
  * 
  * @author quinn
  *
@@ -22,7 +22,7 @@ private DelayQueue<DelayTask> delayQueue = new DelayQueue<DelayTask>();
 	
 	public static void main(String args[]) {
 		LearnDelayQueue tester = new LearnDelayQueue();
-		
+		// å®šä¹‰å·¥ä½œçº¿ç¨‹æ± 
 		ExecutorService executorService = Executors.newFixedThreadPool(2, new ThreadFactory() {
 			AtomicInteger increment = new AtomicInteger();
 			@Override
@@ -67,18 +67,15 @@ private DelayQueue<DelayTask> delayQueue = new DelayQueue<DelayTask>();
 					e.printStackTrace();
 				}
 			}
-			
 		}
-		
 	}
-
 }
 
 class DelayTask implements Delayed {
 	
 	private final long timeStamp;
 	
-	// ¼ÇÂ¼¿ªÊ¼Ê±¼ä
+	// å¼€å§‹æ—¶é—´
 	private final long startTime;
 	
 	private final long delayTime;
@@ -117,8 +114,10 @@ class DelayTask implements Delayed {
 		long realDelayTime = now - this.timeStamp;
 		long Deviation  = realDelayTime - this.delayTime;
 		
-		System.out.println(Thread.currentThread().getName() +"--ÑÓ³ÙÊ±¼äÊÇ:" 
-				+ this.delayTime +"..ÕæÊµÑÓ³ÙÊ±¼ä.......:" + realDelayTime + "......Îó²îÊ±¼ä(µ¥Î»ºÁÃë)..::" +
-				Deviation + "´ËÊ±Íê³ÉÈÎÎñÊ±¼ä¹²¾­ÀúÊ±¼ä: " + (now - startTime));
+		System.out.println(Thread.currentThread().getName() +"--å»¶è¿Ÿæ—¶é—´æ˜¯:" 
+
+				+ this.delayTime +"..çœŸå®å»¶è¿Ÿæ—¶é—´.......:" + realDelayTime + "......è¯¯å·®æ—¶é—´(å•ä½æ¯«ç§’)..::" +
+
+				Deviation + "æ­¤æ—¶å®Œæˆä»»åŠ¡æ—¶é—´å…±ç»å†æ—¶é—´: " + (now - startTime));
 	}
 }

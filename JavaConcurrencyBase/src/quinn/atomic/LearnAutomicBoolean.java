@@ -1,72 +1,104 @@
 package quinn.atomic;
 
+
+
 import java.util.concurrent.atomic.AtomicBoolean;
 
+
+
 /**
+
  * 
+
  * 
+
  * 
+
  * @author quinn
+
  *
+
  */
+
 public class LearnAutomicBoolean {
-	
-	
+
 	public static void main(String args[]) {
-		
+
 	}
-	
+
 	private static AtomicBoolean isUse_good = new AtomicBoolean(false);
-	
+
 	private static volatile boolean isUser_bad = false;
-	
+
+
 	/**
-	 *  ÉèÖÃÔÚÊ¹ÓÃ £¨²»ºÃµÄÊ¹ÓÃ·½Ê½£©
+
+	 *  è®¾ç½®åœ¨ä½¿ç”¨ ï¼ˆä¸å¥½çš„ä½¿ç”¨æ–¹å¼ï¼‰
+
 	 * 
-	 * @return true:³É¹¦£¬ false:Ê§°Ü
+
+	 * @return true:æˆåŠŸï¼Œ false:å¤±è´¥
+
 	 */
+
 	public synchronized static boolean setUse_bad() {
+
 		if (!isUser_bad) {
+
 			isUser_bad = true;
+
 			return true;
 		}
+
 		return false;
 	}
+
 	
+
 	/**
 	 * 
-	 * ÉèÖÃÈ¡ÏûÊ¹ÓÃ £¨²»ºÃµÄÊ¹ÓÃ·½Ê½£©
+	 * è®¾ç½®å–æ¶ˆä½¿ç”¨ ï¼ˆä¸å¥½çš„ä½¿ç”¨æ–¹å¼ï¼‰
 	 * 
-	 * @return true:³É¹¦£¬ false:Ê§°Ü
+	 * @return true:æˆåŠŸï¼Œ false:å¤±è´¥
 	 * 
 	 */
+
 	public synchronized static boolean setNotUse_bad() {
+
 		if (isUser_bad) {
+
 			isUser_bad = false;
 			return true;
 		}
-		
+
 		return false;
 	}
+
 	
+
 	/**
-	 *  ÉèÖÃÔÚÊ¹ÓÃ £¨ÍÆ¼öÊ¹ÓÃ·½Ê½£©
+	 *  è®¾ç½®åœ¨ä½¿ç”¨ ï¼ˆæ¨èä½¿ç”¨æ–¹å¼ï¼‰
 	 * 
-	 * @return true:³É¹¦£¬ false:Ê§°Ü
+	 * @return true:æˆåŠŸï¼Œ false:å¤±è´¥
 	 */
+
 	public static boolean setUse_good() {
 		return isUse_good.compareAndSet(false, true);
 	}
+
 	
+
 	/**
 	 * 
-	 * ÉèÖÃÈ¡ÏûÊ¹ÓÃ £¨ÍÆ¼öÊ¹ÓÃ·½Ê½£©
+	 * è®¾ç½®å–æ¶ˆä½¿ç”¨ ï¼ˆæ¨èä½¿ç”¨æ–¹å¼ï¼‰
 	 * 
-	 * @return true:³É¹¦£¬ false:Ê§°Ü
+	 * @return true:æˆåŠŸï¼Œ false:å¤±è´¥
 	 * 
 	 */
 	public static boolean setNotUse_good() {
 		return isUse_good.compareAndSet(true, false);
 	}
+
 	
+
 }
